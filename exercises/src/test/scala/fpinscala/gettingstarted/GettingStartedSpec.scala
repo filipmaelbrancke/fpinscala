@@ -16,6 +16,9 @@ import PolymorphicFunctions.curry
 import PolymorphicFunctions.isSorted
 import PolymorphicFunctions.isSortedFirstTry
 
+/**
+  * Unit tests based on work by Munich Functional Programming in Scala reading group
+  */
 @RunWith(classOf[org.scalatest.junit.JUnitRunner])
 class GettingStartedSpec extends FlatSpec with PropertyChecks{
 
@@ -90,6 +93,37 @@ class GettingStartedSpec extends FlatSpec with PropertyChecks{
       assertResult(isAlreadySorted)(isSorted(as, gt[Int]))
       assertResult(true)(isSorted(sortedArray, gt[Int]))
     }
+  }
+
+
+  val plus = (_:Int) + (_:Int) //(x: Int, y: Int) => x + y
+  val append = (_:String) + (_:String)
+  def asTuple[A,B] = (_:A, _:B)
+
+  def checkForAll[A,B,C](f: (A,B) => C)(toTest: ((A,B) => C,A,B) => C)(implicit a: Arbitrary[A], b: Arbitrary[B]) = {
+    forAll("x", "y") { (x: A, y: B) =>
+      assertResult(f(x,y))(toTest(f,x,y))
+    }
+  }
+
+  behavior of "curry"
+
+  it should "add 1 + 3 (1)" in {
+    assertResult(4)(curry(plus)(1)(3))
+  }
+
+  it should "add two random numbers" in {
+    forAll("x", "y") { (x: Int, y: Int) =>
+      assertResult(x + y)(curry(plus)(x)(y))
+      assertResult(x + y)(curry(plus)(y)(x))
+    }
+  }
+
+  it should "work for random Strings and Ints" in {
+    def toTest[A,B,C](f: (A,B) => C, x: A, y: B): C = curry(f)(x)(y)
+    checkForAll(plus)(toTest)
+    checkForAll(append)(toTest)
+    checkForAll(asTuple[Int,String])(toTest)
   }
 
 }
