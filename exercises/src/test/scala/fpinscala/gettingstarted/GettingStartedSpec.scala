@@ -182,4 +182,27 @@ class GettingStartedSpec extends FlatSpec with PropertyChecks{
     checkForAll(asTuple[Int,String])(toTest)
   }
 
+
+  behavior of "compose"
+
+  def toString[T](t: T) = t.toString
+  def neg[T](t: T)(implicit num: Numeric[T]) = num.negate(t)
+
+  it should "work" in {
+    assertResult("-42")(compose(toString[Int], neg[Int])(42))
+    assertResult("-42.123")(compose(toString[Double], neg[Double])(42.123))
+  }
+
+  it should "work for random Ints" in {
+    forAll("x") { (x: Int) =>
+      assertResult((-x).toString)(compose(toString[Int], neg[Int])(x))
+    }
+  }
+
+  it should "work for random Doubles" in {
+    forAll("x") { (x: Double) =>
+      assertResult((-x).toString)(compose(toString[Double], neg[Double])(x))
+    }
+  }
+
 }
