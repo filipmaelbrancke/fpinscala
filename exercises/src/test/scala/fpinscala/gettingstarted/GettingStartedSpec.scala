@@ -13,6 +13,7 @@ import org.scalatest.prop.PropertyChecks
 import MyModule.fib
 import PolymorphicFunctions.compose
 import PolymorphicFunctions.curry
+import PolymorphicFunctions.uncurry
 import PolymorphicFunctions.isSorted
 import PolymorphicFunctions.isSortedFirstTry
 
@@ -97,6 +98,7 @@ class GettingStartedSpec extends FlatSpec with PropertyChecks{
 
 
   val plus = (_:Int) + (_:Int) //(x: Int, y: Int) => x + y
+  val curriedPlus = plus.curried //(x: Int) => (y: Int) => x + y
   val append = (_:String) + (_:String)
   def asTuple[A,B] = (_:A, _:B)
 
@@ -121,6 +123,60 @@ class GettingStartedSpec extends FlatSpec with PropertyChecks{
 
   it should "work for random Strings and Ints" in {
     def toTest[A,B,C](f: (A,B) => C, x: A, y: B): C = curry(f)(x)(y)
+    checkForAll(plus)(toTest)
+    checkForAll(append)(toTest)
+    checkForAll(asTuple[Int,String])(toTest)
+  }
+
+  behavior of "uncurry"
+
+  it should "add 1 + 3 (2)" in {
+    assertResult(4)(uncurry(curriedPlus)(1, 3))
+  }
+
+  it should "add two random numbers" in {
+    forAll("x", "y") { (x: Int, y: Int) =>
+      assertResult(x + y)(uncurry(curriedPlus)(x, y))
+      assertResult(x + y)(uncurry(curriedPlus)(y, x))
+    }
+  }
+
+  it should "work for random Strings and Ints" in {
+    def toTest[A,B,C](f: (A,B) => C, x: A, y: B): C = uncurry(f.curried)(x,y)
+    checkForAll(plus)(toTest)
+    checkForAll(append)(toTest)
+    checkForAll(asTuple[Int,String])(toTest)
+  }
+
+
+  behavior of "curry-uncurry"
+
+  it should "add 1 + 3" in {
+    assertResult(4)(curry(uncurry(curriedPlus))(1)(3))
+    assertResult(4)(curry(uncurry(curriedPlus))(3)(1))
+  }
+
+  it should "always give the same result" in {
+    forAll("x", "y") { (x: Int, y: Int) =>
+      assertResult(x + y)(curry(uncurry(curriedPlus))(x)(y))
+    }
+  }
+
+  it should "work for random Strings and Ints" in {
+    def toTest[A,B,C](f: (A,B) => C, x: A, y: B): C = curry(uncurry(f.curried))(x)(y)
+    checkForAll(plus)(toTest)
+    checkForAll(append)(toTest)
+    checkForAll(asTuple[Int,String])(toTest)
+  }
+
+  behavior of "uncurry-curry"
+
+  it should "work" in {
+    assertResult(4)(uncurry(curry(plus))(1, 3))
+  }
+
+  it should "work for random Strings and Ints" in {
+    def toTest[A,B,C](f: (A,B) => C, x: A, y: B): C = uncurry(curry(f))(x,y)
     checkForAll(plus)(toTest)
     checkForAll(append)(toTest)
     checkForAll(asTuple[Int,String])(toTest)
