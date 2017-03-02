@@ -50,15 +50,39 @@ object List { // `List` companion object. Contains functions for creating and wo
     foldRight(ns, 1.0)(_ * _) // `_ * _` is more concise notation for `(x,y) => x * y`; see sidebar
 
 
-  def tail[A](l: List[A]): List[A] = sys.error("todo")
+  /*
+  Although we could return `Nil` when the input list is empty, we choose to throw an exception instead. This is
+  a somewhat subjective choice. In our experience, taking the tail of an empty list is often a bug, and silently
+  returning a value just means this bug will be discovered later, further from the place where it was introduced.
+  */
+  def tail[A](l: List[A]): List[A] = l match {
+    case Nil => sys.error("taking the tail of an empty list")
+    case Cons(_, tail) => tail
+  }
 
-  def setHead[A](l: List[A], h: A): List[A] = sys.error("todo")
+  def setHead[A](l: List[A], h: A): List[A] = l match {
+    case Nil => sys.error("trying to swap the first element of an empty list")
+    case Cons(_, tail) => Cons(h, tail)
+  }
 
-  def drop[A](l: List[A], n: Int): List[A] = sys.error("todo")
+  def drop[A](l: List[A], n: Int): List[A] = {
+    if (n <= 0) l
+    else l match {
+      case Nil => Nil
+      case Cons(_, tail) => drop(tail, n-1)
+    }
+  }
 
-  def dropWhile[A](l: List[A], f: A => Boolean): List[A] = sys.error("todo")
+  def dropWhile[A](l: List[A], f: A => Boolean): List[A] = l match {
+    case Cons(head, tail) if f(head) => dropWhile(tail, f)
+    case _ => l
+  }
 
-  def init[A](l: List[A]): List[A] = sys.error("todo")
+  def init[A](l: List[A]): List[A] = l match {
+    case Nil => sys.error("init of an empty list")
+    case Cons(_, Nil) => Nil
+    case Cons(head, tail) => Cons(head, init(tail))
+  }
 
   def length[A](l: List[A]): Int = sys.error("todo")
 
